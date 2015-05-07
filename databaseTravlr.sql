@@ -86,3 +86,17 @@ BEGIN
 		User.Username = nameParam
 		AND User.PasswordUser = passParam;
 END//
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS sp_login_email//
+CREATE PROCEDURE sp_login_email(IN  emailParam VARCHAR(50), IN passParam VARCHAR(16))
+BEGIN
+	SELECT
+		COUNT(*) as Valid,
+		User.EmailUser,
+		User.PasswordUser
+	FROM TravelrDB.User
+	WHERE
+		User.EmailUser = emailParam
+		AND User.PasswordUser = passParam;
+END//
