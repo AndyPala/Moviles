@@ -3,6 +3,8 @@ CREATE DATABASE TravelrDB;
 USE TravelrDB;
 
 DROP TABLE IF EXISTS Review;
+DROP TABLE IF EXISTS ImagePlace;
+DROP TABLE IF EXISTS Image;
 DROP TABLE IF EXISTS Place;
 DROP TABLE IF EXISTS Category;
 DROP TABLE IF EXISTS User;
@@ -20,6 +22,11 @@ CREATE TABLE Category(
 	descCategory TEXT NOT NULL
 );
 
+CREATE TABLE Image(
+	idImage INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    path TEXT NOT NULL
+);
+
 CREATE TABLE Place(
 	IdPlace INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	idCategory INT UNSIGNED,
@@ -28,6 +35,14 @@ CREATE TABLE Place(
 	LongitudePlace FLOAT(10, 6) NOT NULL,
 
 	foreign key(idCategory) REFERENCES Category(idCategory)
+);
+
+CREATE TABLE ImagePlace(
+	idImage INT UNSIGNED,
+    idPlace INT UNSIGNED,
+    
+    foreign key (idImage) REFERENCES Image(idImage),
+    foreign key (idPlace) REFERENCES Place(idPlace)
 );
 
 CREATE TABLE Review(
@@ -40,6 +55,20 @@ CREATE TABLE Review(
 	foreign key(IdUser) REFERENCES User(IdUser),
 	foreign key(IdPlace) REFERENCES Place(IdPlace)
 );
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS sp_buscar_usuario_id//
+CREATE PROCEDURE sp_buscar_usuario_id(IN idParam INT)
+BEGIN
+	SELECT 
+		COUNT(*) as Valid,
+		User.IdUser,
+        User.Username,
+        User.EmailUser
+	FROM TravelrDB.User
+	WHERE
+		User.IdUser = idParam;
+END//
 
 DELIMITER //
 DROP PROCEDURE IF EXISTS sp_insertar_usuario//
@@ -93,7 +122,7 @@ CREATE PROCEDURE sp_login_email(IN  emailParam VARCHAR(50), IN passParam VARCHAR
 BEGIN
 	SELECT
 		COUNT(*) as Valid,
-		User.EmailUser,
+		User.Username,
 		User.PasswordUser
 	FROM TravelrDB.User
 	WHERE
