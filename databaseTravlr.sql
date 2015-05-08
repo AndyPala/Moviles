@@ -129,3 +129,93 @@ BEGIN
 		User.EmailUser = emailParam
 		AND User.PasswordUser = passParam;
 END//
+
+DELIMITER //
+DROP TABLE IF EXISTS sp_insertar_categoria//
+CREATE PROCEDURE sp_insertar_categoria(IN desParam TEXT)
+BEGIN
+	INSERT INTO Travelrdb.Category(
+		descCategory
+    )
+    VALUES
+    (
+		desParam
+    );
+END//
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS sp_insertar_lugar//
+CREATE PROCEDURE sp_insertar_lugar(IN idCatParam INT, IN nameParam VARCHAR(50), IN latParam FLOAT(10, 6), IN lngParam FLOAT(10, 6), IN treshold INT)
+BEGIN
+	DECLARE eR FLOAT;
+    DECLARE latRad2 FLOAT;
+    DECLARE cont INT;
+    
+    SET eR = 6371000;
+    SET latRad2 = RADIANS(latParam);
+    
+    DROP TABLE IF EXISTS formulas;
+    CREATE TEMPORARY TABLE formulas AS (
+		SELECT
+			p.idPlace as idPlace,
+			RADIANS(P.LatitudePlace) AS latRad1,
+			RADIANS(latParam - P.LatitudePlace) AS dLatRad,
+            RADIANS(lngParam - P.LongitudePlace) AS dLngRad
+		FROM Place AS p
+	);
+    
+    DROP TABLE IF EXISTS a;
+    CREATE TEMPORARY TABLE a AS(
+		SELECT 
+			f.idPlace as idPlace,
+			SIN(f.dLatRad/2) * SIN(f.dLatRad/2) + COS(f.latRad1) * COS(latRad2) * SIN(f.dLngRad/2) * SIN(f.dLngRad/2) AS a
+		FROM formulas AS f
+    );
+    
+    DROP TABLE IF EXISTS c;
+    CREATE TEMPORARY TABLE c AS(
+		SELECT
+			a.idPlace as idPlace,
+			2 * ATAN2( SQRT(a.a), SQRT(1 - a.a) ) AS c
+		from a
+    );
+    
+    DROP TABLE IF EXISTS d;
+    CREATE TEMPORARY TABLE d AS(
+		SELECT
+			c.idPlace as idPlace,
+			eR * c.c AS d
+		FROM c
+    );
+    
+    SET cont = (
+		SELECT COUNT(*)
+        FROM d
+        WHERE d.d <= treshold
+        );
+
+	IF cont > 0 THEN
+		SELECT 0 as Valid;
+	ELSE
+		INSERT INTO Travelrdb.Place(
+			idCategory,
+            NamePlace,
+            LatitudePlace,
+            LongitudePlace
+        )
+        VALUES(
+			idCatParam,
+            namePAram,
+            latParam,
+            lngParam
+        );
+		SELECT 
+			1 AS Valid,
+            last_insert_id() AS Id;
+    END IF;
+    
+    DROP TABLE IF EXISTS d;
+    DROP TABLE IF EXISTS c;
+    DROP TABLE IF EXISTS a;
+    DROP TABLE IF EXISTS formulas;
+END//
