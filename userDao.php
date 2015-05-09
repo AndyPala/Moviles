@@ -1,10 +1,7 @@
 <?php
-
-include 'connection.php';
-
 function login(){
-	$userJson = $_POST['userJSON'];
-	$user = json_decode($userJson, true);
+	$extrasJSON = $_POST['extrasJSON'];
+	$user = json_decode($extrasJSON, true);
 
 	$username = $user['username'];
 	$password = $user['password'];
@@ -32,8 +29,8 @@ function login(){
 }
 
 function createAccount(){
-	$userJson = $_POST['userJSON'];
-	$user = json_decode($userJson, true);
+	$extrasJSON = $_POST['extrasJSON'];
+	$user = json_decode($extrasJSON, true);
 
 	$username = $user['username'];
 	$email = $user['email'];
@@ -57,9 +54,9 @@ function createAccount(){
 	}
 }
 
-function searchId(){
-	$userJson = $_POST['userJSON'];
-	$user = json_decode($userJson, true);
+function searchUser_Id(){
+	$extrasJSON = $_POST['extrasJSON'];
+	$user = json_decode($extrasJSON, true);
 
 	$idUser = $user['idUser'];
 
@@ -79,5 +76,28 @@ function searchId(){
 		disconnect();
 		print json_encode($rows);
 	}	
+}
+
+function searchUserReviews(){
+	$extrasJSON = $_POST['extrasJSON'];
+	$user = json_decode($extrasJSON, true);
+
+	$idUser = $user['idUser'];
+
+	connect();
+
+	$query = mysql_query("call sp_buscar_resena_usuario(".$idUser.")");
+
+	if (mysql_errno()) {
+		disconnect();
+		echo mysql_error();
+	}else {
+		$rows = array();
+		while ($r = mysql_fetch_assoc($query)) {
+			$rows[] = $r;
+		}
+		disconnect();
+		print json_encode($rows);
+	}
 }
 ?>

@@ -108,8 +108,10 @@ CREATE PROCEDURE sp_login_user(IN  nameParam VARCHAR(16), IN passParam VARCHAR(1
 BEGIN
 	SELECT
 		COUNT(*) as Valid,
+        User.IdUser,
 		User.Username,
-		User.PasswordUser
+		User.PasswordUser,
+		User.EmailUser
 	FROM TravelrDB.User
 	WHERE
 		User.Username = nameParam
@@ -134,27 +136,45 @@ DELIMITER //
 DROP TABLE IF EXISTS sp_insertar_categoria//
 CREATE PROCEDURE sp_insertar_categoria(IN desParam TEXT)
 BEGIN
-	INSERT INTO Travelrdb.Category(
-		descCategory
-    )
-    VALUES
-    (
-		desParam
+	DECLARE cont INT;
+    SET cont = (
+		SELECT COUNT(*)
+        FROM TravelrDb.Category
+        WHERE Category.descCategory = desParam
     );
+    
+    IF cont > 0 THEN
+		SELECT 0 AS Valid;
+	ELSE
+		INSERT INTO Travelrdb.Category(
+			descCategory
+		)
+		VALUES
+		(
+			desParam
+		);
+        
+        SELECT
+			1 AS Valid,
+            last_insert_id() AS Id;
+    END IF;
 END//
 
 DELIMITER //
-DROP PROCEDURE IF EXISTS sp_insertar_lugar//
-CREATE PROCEDURE sp_insertar_lugar(IN idCatParam INT, IN nameParam VARCHAR(50), IN latParam FLOAT(10, 6), IN lngParam FLOAT(10, 6), IN treshold INT)
+DROP PROCEDURE IF EXISTS sp_calcular_distancias//
+CREATE PROCEDURE sp_calcular_distancias(IN latParam FLOAT(10, 6), IN lngParam FLOAT(10, 6))
 BEGIN
 	DECLARE eR FLOAT;
     DECLARE latRad2 FLOAT;
-    DECLARE cont INT;
     
     SET eR = 6371000;
     SET latRad2 = RADIANS(latParam);
     
     DROP TABLE IF EXISTS formulas;
+    DROP TABLE IF EXISTS a;
+    DROP TABLE IF EXISTS c;
+    DROP TABLE IF EXISTS d;
+    
     CREATE TEMPORARY TABLE formulas AS (
 		SELECT
 			p.idPlace as idPlace,
@@ -164,7 +184,6 @@ BEGIN
 		FROM Place AS p
 	);
     
-    DROP TABLE IF EXISTS a;
     CREATE TEMPORARY TABLE a AS(
 		SELECT 
 			f.idPlace as idPlace,
@@ -172,7 +191,6 @@ BEGIN
 		FROM formulas AS f
     );
     
-    DROP TABLE IF EXISTS c;
     CREATE TEMPORARY TABLE c AS(
 		SELECT
 			a.idPlace as idPlace,
@@ -180,13 +198,25 @@ BEGIN
 		from a
     );
     
-    DROP TABLE IF EXISTS d;
     CREATE TEMPORARY TABLE d AS(
 		SELECT
 			c.idPlace as idPlace,
 			eR * c.c AS d
 		FROM c
     );
+    
+    DROP TABLE IF EXISTS c;
+    DROP TABLE IF EXISTS a;
+    DROP TABLE IF EXISTS formulas;
+END//
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS sp_insertar_lugar//
+CREATE PROCEDURE sp_insertar_lugar(IN idCatParam INT, IN nameParam VARCHAR(50), IN latParam FLOAT(10, 6), IN lngParam FLOAT(10, 6), IN treshold INT)
+BEGIN
+	DECLARE cont INT;
+    
+	call sp_calcular_distancias(latParam, lngParam);
     
     SET cont = (
 		SELECT COUNT(*)
@@ -215,7 +245,127 @@ BEGIN
     END IF;
     
     DROP TABLE IF EXISTS d;
-    DROP TABLE IF EXISTS c;
-    DROP TABLE IF EXISTS a;
-    DROP TABLE IF EXISTS formulas;
+END//
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS sp_buscar_lugares//
+CREATE PROCEDURE sp_buscar_lugares(IN latParam INT, IN lngParam INT, IN maxDst INT)
+BEGIN
+	call sp_calcular_distancias(12.000000, 25.400000);
+
+	SELECT
+		P.idPlace,
+		C.descCategory,
+		P.NamePlace,
+		P.LatitudePlace,
+		P.LongitudePlace,
+		D.d AS Distance
+	FROM TravelrDb.Place AS P
+	INNER JOIN (d AS D, TravelrDb.Category AS C)
+		ON (P.idPlace = D.idPlace AND P.idCategory = C.idCategory)
+	WHERE D.d <= maxDst
+	ORDER BY Distance;
+
+	DROP TABLE d;
+END//
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS sp_buscar_lugares_categoria//
+CREATE PROCEDURE sp_buscar_lugares_categoria(IN latParam INT, IN lngParam INT, IN maxDst INT, IN idCatParam INT)
+BEGIN
+	call sp_calcular_distancias(12.000000, 25.400000);
+
+	SELECT
+		P.idPlace,
+		C.descCategory,
+		P.NamePlace,
+		P.LatitudePlace,
+		P.LongitudePlace,
+		D.d AS Distance
+	FROM TravelrDb.Place AS P
+	INNER JOIN (d AS D, TravelrDb.Category AS C)
+		ON (P.idPlace = D.idPlace AND P.idCategory = C.idCategory)
+	WHERE
+		D.d <= maxDst AND
+        C.idCategory = idCatParam
+	ORDER BY Distance;
+
+	DROP TABLE d;
+END//
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS sp_buscar_resena_usuario//
+CREATE PROCEDURE sp_buscar_resena_usuario(IN idUserParam INT)
+BEGIN
+	SELECT 
+		IdUser,
+        IdPlace,
+        ReviewDesc,
+        ReviewStars
+	FROM TravelrDb.Review
+    WHERE IdUser = idUserParam;
+END//
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS sp_buscar_resena_usuarioLugar//
+CREATE PROCEDURE sp_buscar_resena_usuarioLugar(IN idUserParam INT, IN idPlaceParam INT)
+BEGIN
+	SELECT 
+		IdUser,
+        IdPlace,
+        ReviewDesc,
+        ReviewStars
+	FROM TravelrDb.Review
+    WHERE
+		idUser = idUserParam AND
+		idPlace = idPlaceParam;
+END//
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS sp_insertar_resena//
+CREATE PROCEDURE sp_insertar_resena(IN idUserParam INT, IN IdPlaceParam INT, IN descParam TEXT, IN starParam INT)
+BEGIN
+	DECLARE cont INT;
+    
+    SET cont = (
+		SELECT COUNT(*)
+        FROM TravelrDb.Review
+        WHERE
+			Review.IdUser = idUserParam AND
+            Review.idPlace = IdPlaceParam
+    );
+    
+    IF cont > 0 THEN
+		DELETE FROM TravelrDb.Review
+        WHERE Review.IdUser = idUserParam;
+    END IF;
+    
+    INSERT INTO TravelrDb.Review(
+		IdUser,
+        IdPlace,
+        ReviewDesc,
+        ReviewStars)
+    VALUES(
+		idUserParam,
+		IdPlaceParam,
+		descParam,
+		starParam);
+        
+	SELECT
+		1 AS Valid,
+        cont AS Deleted,
+        last_insert_id() AS id;
+END//
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS sp_buscar_resena_lugar//
+CREATE PROCEDURE sp_buscar_resena_lugar(IN idPlaceParam INT)
+BEGIN
+	SELECT
+		IdReview,
+        IdUser,
+        ReviewDesc,
+        ReviewStars
+	FROM TravelrDb.Review
+    WHERE Review.idPlace = idPlaceParam;
 END//
