@@ -109,7 +109,7 @@ extrasJSON{
 #"action":"searchPlaces"
 #"extrasJSON":"{"latitude":"145","longitude":"135","maxDst":"3000"}"
 #Recibido:
-#{"idPlace":"2","descCategory":"Libreria","NamePlace":"Ghandi","LatitudePlace":"12.000000","LongitudePlace":"25.400000","Distance":"0"}
+#{"idPlace":"4","descCategory":"Hotel","NamePlace":"Hola","LatitudePlace":"145.000000","LongitudePlace":"135.000000","Distance":"0"}
 
 ##------Buscar lugares cercanos filtrados por categoria
 ##Envia
@@ -135,7 +135,46 @@ extrasJSON{
 #"action":"searchPlaces"
 #"extrasJSON":"{"latitude":"145","longitude":"135","maxDst":"3000","idCategory":"1"}"
 #Recibido:
-#{"idPlace":"2","descCategory":"Libreria","NamePlace":"Ghandi","LatitudePlace":"12.000000","LongitudePlace":"25.400000","Distance":"0"}
+#{"idPlace":"4","descCategory":"Hotel","NamePlace":"Hola","LatitudePlace":"145.000000","LongitudePlace":"135.000000","Distance":"0"}
 
+##------Agregar una reseña
+##Envia
+"action" => "addReview"
+extrasJSON{
+	"idUser" => var,
+	"idPlace" => var,
+	"desc" => var,
+	"star" => var
+}
+##Regresa
+{
+	"Valid" => [0,1],#1 si fue exitoso
+	"Deleted" => var,#deberia regresar 1 siempre, pero por si acaso
+	"id" => var
+}
+#BORRA todos los comentarios hechos por el mismo usuario en el mismo lugar
+#Enviado:
+#"action":"addReview"
+#"extrasJSON":"{"idUser":"1","idPlace":"2","desc":"Gotta test dis","star":"5"}"
+#Recibido:
+#{"Valid":"1","Deleted":"1","id":"9"}
 
+##------Buscar reseñas por lugar
+##Envia
+"action" => "searchReviews_Place"
+extrasJSON{
+	"idPlace" => var
+}
+##Recibe
+{
+	"IdReview" => var,
+	"IdUser" => var,
+	"ReviewDesc" => var,
+	"ReviewStars" => var
+}
+#Enviado:
+#"action":"searchReviews_Place"
+#"extrasJSON":"{"idPlace":"2"}"
+#Recibido:
+#{"IdReview":"9","IdUser":"1","ReviewDesc":"Gotta test dis","ReviewStars":"5"}
 ?>

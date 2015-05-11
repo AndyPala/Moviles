@@ -251,7 +251,7 @@ DELIMITER //
 DROP PROCEDURE IF EXISTS sp_buscar_lugares//
 CREATE PROCEDURE sp_buscar_lugares(IN latParam INT, IN lngParam INT, IN maxDst INT)
 BEGIN
-	call sp_calcular_distancias(12.000000, 25.400000);
+	call sp_calcular_distancias(latParam, lngParam);
 
 	SELECT
 		P.idPlace,
@@ -273,7 +273,7 @@ DELIMITER //
 DROP PROCEDURE IF EXISTS sp_buscar_lugares_categoria//
 CREATE PROCEDURE sp_buscar_lugares_categoria(IN latParam INT, IN lngParam INT, IN maxDst INT, IN idCatParam INT)
 BEGIN
-	call sp_calcular_distancias(12.000000, 25.400000);
+	call sp_calcular_distancias(latParam, lngParam);
 
 	SELECT
 		P.idPlace,
@@ -287,7 +287,7 @@ BEGIN
 		ON (P.idPlace = D.idPlace AND P.idCategory = C.idCategory)
 	WHERE
 		D.d <= maxDst AND
-        C.idCategory = idCatParam
+        P.idCategory = idCatParam
 	ORDER BY Distance;
 
 	DROP TABLE d;
