@@ -169,6 +169,7 @@ extrasJSON{
 {
 	"IdReview" => var,
 	"IdUser" => var,
+	"Username" => var,
 	"ReviewDesc" => var,
 	"ReviewStars" => var
 }

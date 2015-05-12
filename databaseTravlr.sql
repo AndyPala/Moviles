@@ -362,12 +362,15 @@ DROP PROCEDURE IF EXISTS sp_buscar_resena_lugar//
 CREATE PROCEDURE sp_buscar_resena_lugar(IN idPlaceParam INT)
 BEGIN
 	SELECT
-		IdReview,
-        IdUser,
-        ReviewDesc,
-        ReviewStars
-	FROM TravelrDb.Review
-    WHERE Review.idPlace = idPlaceParam;
+		R.IdReview,
+        R.IdUser,
+        U.Username,
+        R.ReviewDesc,
+        R.ReviewStars
+	FROM TravelrDb.Review AS R
+    INNER JOIN (TravelrDb.User AS U)
+		ON R.IdUser = U.IdUser
+    WHERE R.idPlace = idPlaceParam;
 END//
 
 DELIMITER //
