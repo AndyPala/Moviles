@@ -255,14 +255,14 @@ BEGIN
 
 	SELECT
 		P.idPlace,
-		C.descCategory,
+		P.idCategory,
 		P.NamePlace,
 		P.LatitudePlace,
 		P.LongitudePlace,
 		D.d AS Distance
 	FROM TravelrDb.Place AS P
-	INNER JOIN (d AS D, TravelrDb.Category AS C)
-		ON (P.idPlace = D.idPlace AND P.idCategory = C.idCategory)
+	INNER JOIN (d AS D)
+		ON (P.idPlace = D.idPlace)
 	WHERE D.d <= maxDst
 	ORDER BY Distance;
 
@@ -368,4 +368,16 @@ BEGIN
         ReviewStars
 	FROM TravelrDb.Review
     WHERE Review.idPlace = idPlaceParam;
+END//
+
+DELIMITER //
+DROP PROCEDURE IF EXISTS sp_buscar_promedio_lugar//
+CREATE PROCEDURE sp_buscar_promedio_lugar(IN idParam INT)
+BEGIN
+	SELECT
+		idPlace,
+		AVG(ReviewStars) AS Promedio
+	FROM TravelrDb.Review
+	WHERE idPlace = idParam
+	GROUP BY idPlace;
 END//

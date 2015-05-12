@@ -37,7 +37,11 @@ switch ($action) {
 	case 'searchReviews_Place':
 		searchReviews_Place();
 		break;
+	case 'getReviewAverage':
+		getReviewAverage();
+		break;
 	default:
+		print("Message error");
 		break;
 }
 

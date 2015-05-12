@@ -97,7 +97,7 @@ extrasJSON{
 ##Regresa
 {
 	"idPlace" => var,
-	"descCategory" => var,
+	"idCategory" => var,
 	"NamePlace" => var,
 	"LatitudePlace" => var,
 	"LongitudePlace" => var,
@@ -109,7 +109,7 @@ extrasJSON{
 #"action":"searchPlaces"
 #"extrasJSON":"{"latitude":"145","longitude":"135","maxDst":"3000"}"
 #Recibido:
-#{"idPlace":"4","descCategory":"Hotel","NamePlace":"Hola","LatitudePlace":"145.000000","LongitudePlace":"135.000000","Distance":"0"}
+#{"idPlace":"4","idCategory":"1","NamePlace":"Hola","LatitudePlace":"145.000000","LongitudePlace":"135.000000","Distance":"0"}
 
 ##------Buscar lugares cercanos filtrados por categoria
 ##Envia
@@ -177,4 +177,21 @@ extrasJSON{
 #"extrasJSON":"{"idPlace":"2"}"
 #Recibido:
 #{"IdReview":"9","IdUser":"1","ReviewDesc":"Gotta test dis","ReviewStars":"5"}
+
+##------Obtener promedio del lugar
+##Envia
+"action" => "getReviewAverage"
+extrasJSON{
+	"idPlace" => var
+}
+##Recibe
+{
+	"idPlace" => var,
+	"Promedio" => var
+}
+#Enviado:
+#"action":"getReviewAverage"
+#"extrasJSON":"{"idPlace":"1"}"
+#Recibido:
+#{"idPlace":"1","Promedio":"3.3333"}
 ?>
